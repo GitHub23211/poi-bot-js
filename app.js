@@ -4,7 +4,7 @@ const { Client, GatewayIntentBits, Collection } = require('discord.js')
 require('dotenv').config()
 
 const token = process.env.DISCORD_TOKEN
-const client = new Client({intents: [GatewayIntentBits.Guilds]})
+const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]})
 
 function loadCommands() {
     client.commands = new Collection()
@@ -23,7 +23,6 @@ function loadCommands() {
         }
     }
 }
-
 
 function loadEventListeners() {
     const eventsPath = path.join(__dirname, 'events')
