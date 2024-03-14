@@ -4,7 +4,7 @@ const { Client, GatewayIntentBits, Collection } = require('discord.js')
 require('dotenv').config()
 
 const token = process.env.DISCORD_TOKEN
-const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent]})
+const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent]})
 
 function loadCommands() {
     client.commands = new Collection()
