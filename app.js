@@ -8,6 +8,7 @@ const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits
 
 function loadCommands() {
     client.commands = new Collection()
+    client.prefixes = new Collection()
     const foldersPath = path.join(__dirname, 'commands')
     const commandFolders = fs.readdirSync(foldersPath)
     
@@ -18,7 +19,12 @@ function loadCommands() {
             const filePath = path.join(commandsPath, file)
             const commands = require(filePath)
             for(const command in commands) {
-                client.commands.set(command, commands[command])
+                if(folder === 'prefix') {
+                    client.prefixes.set(command, commands[command])
+                }
+                else {
+                    client.commands.set(command, commands[command])
+                }
             }
         }
     }
