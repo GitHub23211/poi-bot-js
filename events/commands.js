@@ -31,7 +31,11 @@ const handlePrefix = {
 
         if(!command) return
 
-        console.log(command)
+        try {
+            await command.execute(message)
+        } catch (e) {
+            console.error(e)
+        }
     }
 }
 
