@@ -7,12 +7,16 @@ const play = {
             .setDescription('Play music from a YouTube link'),
     async execute(message) {
         const channel = message.member.voice.channel
+        if(!channel) {
+            message.reply("Connect to a voice channel first!")
+            return
+        }
         joinVoiceChannel({
             channelId: channel.id,
             guildId: channel.guild.id,
             adapterCreator: channel.guild.voiceAdapterCreator,
         });
-        message.reply("yes")
+        message.reply("Playing music")
     }
 }
 
@@ -21,7 +25,18 @@ const stop = {
             .setName('stop')
             .setDescription('Disconnects bot from voice channel'),
     async execute(message) {
-        getVoiceConnection(message.member.voice.channel.guild.id).destroy()
+        const channel = message.member.voice.channel
+        if(!channel) {
+            message.reply("Connect to a voice channel first!")
+            return
+        }
+        const connection = getVoiceConnection(channel.guild.id)
+        if(!connection) {
+            message.reply("I'm not currently in a voice channel!")
+            return
+        }
+        connection.destroy()
+        message.reply("Leaving VC")
     }
 }
     
