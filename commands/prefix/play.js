@@ -1,5 +1,6 @@
 const PrefixCommandBuilder = require('../../components/prefix-command-builder.js')
-const { joinVoiceChannel } = require('@discordjs/voice')
+const { joinVoiceChannel, createAudioResource, createAudioPlayer, NoSubscriberBehavior, AudioPlayerStatus } = require('@discordjs/voice')
+const ytdl = require('play-dl')
 
 /**
  * Play music from a given YouTube URL
@@ -12,16 +13,35 @@ const play = {
             .setDescription('Play music from a YouTube link'),
     async execute(message, options) {
         const channel = message.member.voice.channel
-        if(!channel) {
-            message.reply("Connect to a voice channel first!")
-            return
-        }
-        joinVoiceChannel({
+
+        if(!channel) { await message.reply("Connect to a voice channel first!"); return }
+        if(options.length === 0) { await message.reply('YouTube URL missing.'); return }
+
+        const connection = joinVoiceChannel({
             channelId: channel.id,
             guildId: channel.guild.id,
             adapterCreator: channel.guild.voiceAdapterCreator,
-        });
-        message.reply("Playing music")
+        })
+
+        const videoInfo = await ytdl.video_info(options[0])
+        const ytStream = await ytdl.stream_from_info(videoInfo, {quality: 2})
+        .catch( async e => {
+            console.error(`Stream Error\n${e.toString()}`)
+            await message.reply('Invalid YouTube URL.')
+        })
+
+        const resource = createAudioResource(ytStream.stream, {
+            inputType: ytStream.type
+        })
+        const player = createAudioPlayer({behaviors: {
+            noSubscriber: NoSubscriberBehavior.Stop
+        }})
+
+        connection.subscribe(player)
+        player.play(resource)
+
+        player.once('error', e => console.error(`Audio Player Error\n${e.toStrig()}`))
+              .once(AudioPlayerStatus.Playing, async () => await message.reply(`Now Playing: ${videoInfo.video_details.title}`))
     }
 }
     
