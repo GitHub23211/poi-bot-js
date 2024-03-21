@@ -24,8 +24,8 @@ const play = {
         })
 
         const videoInfo = await ytdl.video_info(options[0])
-        const ytStream = await ytdl.stream_from_info(videoInfo, {quality: 2})
-        .catch( async e => {
+        const ytStream = await ytdl.stream_from_info(videoInfo, {quality: 0})
+        .catch(async e => {
             console.error(`Stream Error\n${e.toString()}`)
             await message.reply('Invalid YouTube URL.')
         })
@@ -33,6 +33,7 @@ const play = {
         const resource = createAudioResource(ytStream.stream, {
             inputType: ytStream.type
         })
+
         const player = createAudioPlayer({behaviors: {
             noSubscriber: NoSubscriberBehavior.Stop
         }})
@@ -40,9 +41,10 @@ const play = {
         connection.subscribe(player)
         player.play(resource)
 
-        player.once('error', e => console.error(`Audio Player Error\n${e.toStrig()}`))
-              .once(AudioPlayerStatus.Playing, async () => await message.reply(`Now Playing: ${videoInfo.video_details.title}`))
+        player.on('error', e => console.error(`Audio Player Error\n${e.toStrig()}`))
+              .on(AudioPlayerStatus.Playing, async () => await message.reply(`Now Playing: ${videoInfo['video_details']['title']}`))
     }
 }
+
     
 module.exports = { play }
