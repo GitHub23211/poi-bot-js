@@ -6,9 +6,13 @@ require('dotenv').config()
 const token = process.env.DISCORD_TOKEN
 const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent]})
 
-function loadCommands() {
+function loadCollections() {
     client.commands = new Collection()
     client.prefixes = new Collection()
+    client.queue = new Collection()
+}
+
+function loadCommands() {
     const foldersPath = path.join(__dirname, 'commands')
     const commandFolders = fs.readdirSync(foldersPath)
     
@@ -49,6 +53,7 @@ function loadEventListeners() {
     }
 }
 
+loadCollections()
 loadCommands()
 loadEventListeners()
 client.login(token)
