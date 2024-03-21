@@ -28,7 +28,7 @@ const handlePrefix = {
         if(!message.guildId == process.env.GUILD_ID || !message.content.startsWith(PREFIX)) return
         
         const raw = message.content.split(' ')
-        const command = message.client.prefixes.get(raw[0].slice(2, raw[0].length))
+        const command = message.client.prefixes.get(raw[0].slice(2))
         const options = raw.slice(1)
 
         if(!command) return
