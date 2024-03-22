@@ -9,7 +9,8 @@ const client = new Client({intents: [GatewayIntentBits.Guilds, GatewayIntentBits
 function loadCollections() {
     client.commands = new Collection()
     client.prefixes = new Collection()
-    client.queue = new Collection()
+    client.cooldowns = new Collection()
+    client.queue = []
 }
 
 function loadCommands() {
