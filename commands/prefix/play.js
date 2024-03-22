@@ -1,5 +1,5 @@
 const PrefixCommandBuilder = require('../../components/prefix-command-builder.js')
-const { joinVoiceChannel, createAudioResource, createAudioPlayer, NoSubscriberBehavior, AudioPlayerStatus } = require('@discordjs/voice')
+const { getVoiceConnection, joinVoiceChannel, createAudioResource, createAudioPlayer, NoSubscriberBehavior, AudioPlayerStatus } = require('@discordjs/voice')
 const ytdl = require('play-dl')
 
 /**
@@ -10,41 +10,77 @@ const ytdl = require('play-dl')
 const play = {
     data: new PrefixCommandBuilder()
             .setName('play')
-            .setDescription('Play music from a YouTube link'),
+            .setDescription('Play music from a YouTube link')
+            .setCooldown(3),
     async execute(message, options) {
         const channel = message.member.voice.channel
+        const client = message.client
 
         if(!channel) { await message.reply("Connect to a voice channel first!"); return }
         if(options.length === 0) { await message.reply('YouTube URL missing.'); return }
 
-        const connection = joinVoiceChannel({
-            channelId: channel.id,
-            guildId: channel.guild.id,
-            adapterCreator: channel.guild.voiceAdapterCreator,
-        })
+        await addQueue(client, options[0])
 
-        const videoInfo = await ytdl.video_info(options[0])
-        const ytStream = await ytdl.stream_from_info(videoInfo, {quality: 0})
-        .catch(async e => {
-            console.error(`Stream Error\n${e.toString()}`)
-            await message.reply('Invalid YouTube URL.')
-        })
+        if(client.isPlaying) { await message.channel.send(`Added ${client.queue[0][0]} to the queue!`); return}
 
-        const resource = createAudioResource(ytStream.stream, {
-            inputType: ytStream.type
-        })
+        const connection = getVoiceConnection(message.guild.id) ?? connectToChannel(channel)
+        client.player ??= newAudioPlayer(client, message)
+        connection.subscribe(client.player)
 
-        const player = createAudioPlayer({behaviors: {
-            noSubscriber: NoSubscriberBehavior.Stop
-        }})
+        if(client.queue.length === 0) { await message.reply('No songs in queue.'); return }
 
-        connection.subscribe(player)
-        player.play(resource)
-
-        player.on('error', e => console.error(`Audio Player Error\n${e.toStrig()}`))
-              .on(AudioPlayerStatus.Playing, async () => await message.reply(`Now Playing: ${videoInfo['video_details']['title']}`))
+        client.song = client.queue.shift()
+        client.player.play(
+            createAudioResource(client.song[1].stream, {
+                inputType: client.song[1].type
+            })
+        )
     }
 }
 
-    
+function connectToChannel(channel) {
+    return joinVoiceChannel({
+        channelId: channel.id,
+        guildId: channel.guild.id,
+        adapterCreator: channel.guild.voiceAdapterCreator,
+    })
+}
+
+function newAudioPlayer(client, message) {
+    const player = createAudioPlayer({behaviors: {
+        noSubscriber: NoSubscriberBehavior.Stop
+    }})
+
+    player
+    .on('error', e => console.error(`Audio Player Error\n${e.toString()}`))
+    .on(AudioPlayerStatus.Playing, async () => {
+        await message.channel.send(`Now Playing: ${client.song[0]}.`)
+        client.isPlaying = true
+    })
+    .on(AudioPlayerStatus.Idle, async () => {
+        if(client.queue.length === 0) { 
+            await message.channel.send('Queue finished.')
+            client.isPlaying = false
+            return
+        }
+        client.song = client.queue.shift()
+        player.play(
+            createAudioResource(client.song[1].stream, {
+                inputType: client.song[1].type
+            })
+        )
+    })
+    return player
+}
+
+async function addQueue(client, url) {
+    const videoInfo = await ytdl.video_info(url)
+    const ytStream = await ytdl.stream_from_info(videoInfo, {quality: 0})
+    .catch(async e => {
+        console.error(`Stream Error\n${e.toString()}`)
+        await message.reply('Invalid YouTube URL.')
+    })
+    client.queue.push([videoInfo['video_details']['title'], ytStream])
+}
+
 module.exports = { play }
