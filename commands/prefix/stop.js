@@ -12,12 +12,15 @@ const stop = {
             .setDescription('Disconnects bot from voice channel'),
     async execute(message, options) {
         const connection = getVoiceConnection(message.guild.id)
-        if(!connection) {
-            await message.reply("I'm not currently in a voice channel!")
-            return
-        }
+        if(!connection) { await message.reply("I'm not currently in a voice channel!"); return }
+
+        message.client.player.stop()
+        message.client.player = null
+        message.client.isPlaying = false
+        message.client.queue = []
+        
         connection.destroy()
-        await message.reply("Leaving VC")
+        await message.channel.send("Leaving VC")
     }
 }
     
