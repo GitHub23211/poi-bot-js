@@ -16,6 +16,7 @@ const stop = {
 
         message.client.player.stop()
         message.client.player = null
+        message.client.song = null
         message.client.isPlaying = false
         message.client.queue = []
         
