@@ -19,7 +19,7 @@ const play = {
         if(!channel) { await message.reply("Connect to a voice channel first!"); return }
         if(options.length === 0) { await message.reply('YouTube URL missing.'); return }
 
-        await addQueue(client, options[0])
+        if(!await addQueue(message, options[0])) return
 
         if(client.isPlaying) { await message.channel.send(`Added ${client.queue[0][0]} to the queue!`); return}
 
@@ -73,14 +73,19 @@ function newAudioPlayer(client, message) {
     return player
 }
 
-async function addQueue(client, url) {
-    const videoInfo = await ytdl.video_info(url)
-    const ytStream = await ytdl.stream_from_info(videoInfo, {quality: 0})
-    .catch(async e => {
+async function addQueue(message, url) {
+    try {
+        const client = message.client
+        const videoInfo = await ytdl.video_info(url)
+        const ytStream = await ytdl.stream_from_info(videoInfo, {quality: 0})
+        client.queue.push([videoInfo['video_details']['title'], ytStream])
+        return true
+    }
+    catch (e) {
         console.error(`Stream Error\n${e.toString()}`)
         await message.reply('Invalid YouTube URL.')
-    })
-    client.queue.push([videoInfo['video_details']['title'], ytStream])
+        return false
+    }
 }
 
 module.exports = { play }
