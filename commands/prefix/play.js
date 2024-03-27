@@ -18,16 +18,12 @@ const play = {
 
         if(!channel) { await message.reply("Connect to a voice channel first!"); return }
         if(options.length === 0) { await message.reply('YouTube URL missing.'); return }
-
         if(!await addQueue(message, options[0])) return
-
         if(client.isPlaying) { await message.channel.send(`Added ${client.queue[0][0]} to the queue!`); return}
 
         const connection = getVoiceConnection(message.guild.id) ?? connectToChannel(channel)
         client.player ??= newAudioPlayer(client, message)
         connection.subscribe(client.player)
-
-        if(client.queue.length === 0) { await message.reply('No songs in queue.'); return }
 
         client.song = client.queue.shift()
         client.player.play(
