@@ -17,7 +17,7 @@ const skip = {
         if(!connection) { await message.reply("I'm not currently in a voice channel!"); return }
         if(client.queue.length === 0) { await message.channel.send(`No more songs in queue.`); return}
 
-        await message.channel.send(`Skipping ${client.song[0]}...`)
+        await message.channel.send(`Skipping ${client.song.name}...`)
         client.song = client.queue.shift()
         client.player.play(
             createAudioResource(client.song[1].stream, {

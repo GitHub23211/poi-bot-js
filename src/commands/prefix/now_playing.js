@@ -11,7 +11,7 @@ const np = {
             .setDescription('Messages currently playing song'),
     async execute(message, options) {
         if(!message.client.song) { await message.reply('No song currently playing.'); return}
-        await message.channel.send(`Currently playing: ${message.client.song[0]}`)
+        await message.channel.send(`Currently playing: ${message.client.song.name}`)
     }
 }
     
