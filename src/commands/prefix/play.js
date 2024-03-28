@@ -1,8 +1,6 @@
 const PrefixCommandBuilder = require('../../components/prefix-command-builder.js')
-const { getVoiceConnection, joinVoiceChannel, createAudioResource, createAudioPlayer, NoSubscriberBehavior, AudioPlayerStatus } = require('@discordjs/voice')
-const ytdl = require('play-dl')
-const process = require('node:child_process')
-const prism = require('prism-media')
+const SongObject = require('../../components/song-object.js')
+const { getVoiceConnection, joinVoiceChannel, createAudioPlayer, NoSubscriberBehavior, AudioPlayerStatus } = require('@discordjs/voice')
 
 /**
  * Play music from a given YouTube URL
@@ -21,14 +19,13 @@ const play = {
         if(!channel) { await message.reply("Connect to a voice channel first!"); return }
         if(options.length === 0) { await message.reply('YouTube URL missing.'); return }
         if(!await addQueue(message, options[0])) return
-        if(client.isPlaying) { await message.channel.send(`Added ${client.queue[0][0]} to the queue!`); return}
+        if(client.isPlaying) { await message.channel.send(`Added ${client.queue[0].name} to the queue!`); return}
 
         const connection = getVoiceConnection(message.guild.id) ?? connectToChannel(channel)
+        client.song = client.queue.shift()
         client.player ??= newAudioPlayer(client, message)
+        client.player.play(await client.song.createSongResource())
         connection.subscribe(client.player)
-
-        client.song = createResource(client.queue.shift()[1])
-        client.player.play(client.song)
     }
 }
 
@@ -48,7 +45,7 @@ function newAudioPlayer(client, message) {
     player
     .on('error', e => console.error(`Audio Player Error\n${e.toString()}`))
     .on(AudioPlayerStatus.Playing, async () => {
-        //await message.channel.send(`Now Playing: ${client.song[0]}.`)
+        await message.channel.send(`Now Playing: ${client.song.name}.`)
         client.isPlaying = true
     })
     .on(AudioPlayerStatus.Idle, async () => {
@@ -57,21 +54,19 @@ function newAudioPlayer(client, message) {
             client.isPlaying = false
             return
         }
-        // client.song = client.queue.shift()
-        // player.play(
-        //     createAudioResource(client.song[1].stream, {
-        //         inputType: client.song[1].type
-        //     })
-        // )
+
+        client.song = client.queue.shift()
+        player.play(await client.song.createSongResource())
     })
     return player
 }
 
 async function addQueue(message, url) {
     try {
-        const client = message.client
-        const info = await ytdl.video_info(url)
-        client.queue.push(['test', info.format.filter(f => f.itag === 251)[0].url])
+        const song = new SongObject(url)
+        // Need to find better way to invoke this function
+        await song.getAudioInfo()
+        message.client.queue.push(song)
         return true
     }
     catch (e) {
@@ -79,22 +74,6 @@ async function addQueue(message, url) {
         await message.reply('Invalid YouTube URL.')
         return false
     }
-}
-
-function createResource(url) {
-    const stream = process.spawn('ffmpeg', [
-        '-i', url,
-        '-f', 's16le', 
-        '-ar', '48000', 
-        '-ac', '2', 
-        '-ab', '320',
-        '-af', 'bass=g=20',
-        'pipe:1'
-    ])
-    
-    const opus = stream.stdout.pipe(new prism.opus.Encoder({ rate: 48000, channels: 2, frameSize: 960 }));
-    const resource = createAudioResource(opus, {inputType: 'opus'})
-    return resource
 }
 
 module.exports = { play }
