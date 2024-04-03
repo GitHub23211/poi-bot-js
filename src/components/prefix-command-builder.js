@@ -16,6 +16,5 @@ module.exports = class PrefixCommandBuilder {
 
     setCooldown(num) {
         this.cooldown = num*1000
-        return this
     }
 }
