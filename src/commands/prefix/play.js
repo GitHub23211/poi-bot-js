@@ -5,25 +5,26 @@ const { getVoiceConnection, joinVoiceChannel, createAudioPlayer, NoSubscriberBeh
 /**
  * Play music from a given YouTube URL
  * @param message - Message passed from Event
- * @param options - Array with one element - URL of Youtube video
+ * @param options - Array with at least one element - URL of Youtube video
+ * Any element after the URL video needs to be validated as a proper ffmpeg filter
  */
 const play = {
     data: new PrefixCommandBuilder()
             .setName('play')
             .setDescription('Play music from a YouTube link')
-            .setCooldown(3),
+            .setCooldown(1),
     async execute(message, options) {
         const channel = message.member.voice.channel
         const client = message.client
 
         if(!channel) { await message.reply("Connect to a voice channel first!"); return }
         if(options.length === 0) { await message.reply('YouTube URL missing.'); return }
-        if(!await addQueue(message, options[0])) return
+        if(!await addQueue(message, options)) return
         if(client.isPlaying) { await message.channel.send(`Added ${client.queue[0].name} to the queue!`); return}
 
         const connection = getVoiceConnection(message.guild.id) ?? connectToChannel(channel)
-        client.song = client.queue.shift()
         client.player ??= newAudioPlayer(client, message)
+        client.song = client.queue.shift()
         client.player.play(await client.song.createSongResource())
         connection.subscribe(client.player)
     }
@@ -61,9 +62,11 @@ function newAudioPlayer(client, message) {
     return player
 }
 
-async function addQueue(message, url) {
+async function addQueue(message, options) {
     try {
-        const song = new SongObject(url)
+        const url = options[0]
+        const filters = options.slice(1)
+        const song = new SongObject(url, filters)
         // Need to find better way to invoke this function
         await song.getAudioInfo()
         message.client.queue.push(song)
