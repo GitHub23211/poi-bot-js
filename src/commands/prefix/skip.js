@@ -19,11 +19,7 @@ const skip = {
 
         await message.channel.send(`Skipping ${client.song.name}...`)
         client.song = client.queue.shift()
-        client.player.play(
-            createAudioResource(client.song[1].stream, {
-                inputType: client.song[1].type
-            })
-        )
+        client.player.play(await client.song.createSongResource())
     }
 }
     
