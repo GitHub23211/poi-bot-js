@@ -2,7 +2,7 @@ const { Events } = require('discord.js')
 
 require('dotenv').config()
 
-const PREFIX = 'f'
+const PREFIX = `f'`
 
 const handleSlash = {
     name: Events.InteractionCreate,
