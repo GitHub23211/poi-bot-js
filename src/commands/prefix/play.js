@@ -20,7 +20,7 @@ const play = {
         if(!channel) { await message.reply("Connect to a voice channel first!"); return }
         if(options.length === 0) { await message.reply('YouTube URL missing.'); return }
         if(!await addQueue(message, options)) return
-        if(client.isPlaying) { await message.channel.send(`Added ${client.queue[0].name} to the queue!`); return}
+        if(client.isPlaying) { await message.channel.send(`Added ${client.queue[0].name} to the queue!`); return }
 
         const connection = getVoiceConnection(message.guild.id) ?? connectToChannel(channel)
         client.player ??= newAudioPlayer(client, message)
@@ -73,7 +73,7 @@ async function addQueue(message, options) {
         return true
     }
     catch (e) {
-        console.error(`Stream Error\n${e.toString()}`)
+        console.error(`Stream Error\n${e.stack}`)
         await message.reply('Invalid YouTube URL.')
         return false
     }
