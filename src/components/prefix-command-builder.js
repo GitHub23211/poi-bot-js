@@ -1,5 +1,4 @@
 module.exports = class PrefixCommandBuilder {
-    options = []
     name = ''
     description = ''
     cooldown = 0
