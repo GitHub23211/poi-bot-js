@@ -31,7 +31,7 @@ const handlePrefix = {
         const command = message.client.prefixes.get(raw[0].slice(2))
         const options = raw.slice(1)
 
-        if(!command) return
+        if(!command.data) return
         if(!await onCooldown(message, command.data)) return
 
         try {
