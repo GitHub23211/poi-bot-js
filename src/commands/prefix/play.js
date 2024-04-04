@@ -66,7 +66,7 @@ async function addQueue(message, options) {
     try {
         const url = options[0]
         const filters = options.slice(1)
-        const song = new SongObject(url, filters)
+        const song = new SongObject(url, filters, message.client)
         // Need to find better way to invoke this function
         await song.getAudioInfo()
         message.client.queue.push(song)
