@@ -53,7 +53,7 @@ module.exports =  class SongObject{
 
         this.client.stream?.kill()
         this.client.stream = this.createStream()
-        const opus = stream.stdout.pipe(new prism.opus.Encoder({ rate: 48000, channels: 2, frameSize: 960 }));
+        const opus = this.client.stream.stdout.pipe(new prism.opus.Encoder({ rate: 48000, channels: 2, frameSize: 960 }));
         const resource = createAudioResource(opus, {inputType: 'opus'})
         return resource
     }
